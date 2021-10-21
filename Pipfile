@@ -31,4 +31,4 @@ selenium = "==3.141.0"
 [dev-packages]
 
 [requires]
-python_version = "3.6"
+python_version = "3.9.7"
