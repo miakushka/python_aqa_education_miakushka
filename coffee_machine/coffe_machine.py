@@ -3,36 +3,35 @@ class CoffeeMachine:
     Class, that implements general coffee machine functionality
     """
 
-    espresso_params = {
-        "water": 250,
-        "milk": 0,
-        "beans": 16,
-        "price": 4
-    }
-    latte_params = {
-        "water": 350,
-        "milk": 75,
-        "beans": 20,
-        "price": 7
-    }
-    cappuccino_params = {
-        "water": 200,
-        "milk": 100,
-        "beans": 12,
-        "price": 6
-    }
-
     water_per_cup = None
     milk_per_cup = None
     beans_per_cup = None
     drink_price = None
-    welcome_message = '''Please choose an action: 
+    current_state = "action_required"
+
+    MESSAGES = {
+        "welcome": '''Please choose an action: 
             1 - buy coffee; 
             2 - fill coffee machine; 
             3 - take the cash; 
             4 - display remaining ingredients; 
-            5 - exit '''
-    error_message = "Wrong command, please try again"
+            5 - exit''',
+
+        "select_drink": '''Now please select a drink: 
+                    1 - espresso; 
+                    2 - latte; 
+                    3 - cappuccino. 
+                    Enter 0 to return to main menu ''',
+
+        "cups_amount": "How many cups do you want? Press 0 to return to main menu ",
+
+        "refilling": '''How much ingredients would you like to add (water, milk, beans, cups)?
+        Enter needed quantities, divided by space: ''',
+
+        "error": "Wrong command, please try again",
+
+        "enter_command": "Your command: "
+    }
 
     def __init__(self, water_total, milk_total, beans_total, empty_cups_total, cash):
         self.water_total = water_total
@@ -41,93 +40,124 @@ class CoffeeMachine:
         self.empty_cups_total = empty_cups_total
         self.cash_total = cash
 
-    def start_machine(self, action=None):
-        while True:
-            if action is None:
-                action = self.user_input(self.welcome_message)
-            if action == "1":
-                while True:
-                    drink = self.user_input('''Now please select a drink: 
-                    1 - espresso; 
-                    2 - latte; 
-                    3 - cappuccino. 
-                    Press 0 to return to main menu ''')
-                    if drink == "1":
-                        self.set_resources_needed(self.espresso_params)
-                    elif drink == "2":
-                        self.set_resources_needed(self.latte_params)
-                    elif drink == "3":
-                        self.set_resources_needed(self.cappuccino_params)
-                    elif drink == "0":
-                        action = None
-                        break
-                    else:
-                        print(self.error_message)
-                        break
-                    self.make_coffee()
-                    action = None
-                    break
-            elif action == "2":
-                self.refilling()
-                action = None
-            elif action == "3":
-                self.take_cash()
-                action = None
-            elif action == "4":
-                self.print_current_amounts()
-                action = None
-            elif action == "5":
-                break
-            else:
-                print(self.error_message)
-                action = None
+    def process_user_command(self):
+        if self.current_state == "action_required":
+            print(self.MESSAGES["welcome"])
+            command = input(self.MESSAGES["enter_command"])
+            if command == "5":
+                return False
+            self.choose_action(command)
+            return True
 
-    def user_input(self, message=''):
-        command = ''
-        while not command:
-            command = input(message)
-        return command
+        elif self.current_state == "enter_drink":
+            print(self.MESSAGES["select_drink"])
+            command = input(self.MESSAGES["enter_command"])
+            if command == "0":
+                return False
+            self.choose_drink(command)
+            return True
 
-    def make_coffee(self):
-        while True:
+        elif self.current_state == "enter_cups_amount":
+            print(self.MESSAGES["cups_amount"])
+            command = input(self.MESSAGES["enter_command"])
+            self.make_drink(command)
+            return True
+
+        elif self.current_state == "refilling":
             self.print_current_amounts()
-            cups = self.user_input("How many cups do you want? Press 0 to return to main menu ")
-            cups = int(cups)
-            if cups == 0:
-                break
-            print('''For %d cups of coffee you will need:
+            print(self.MESSAGES["refilling"])
+            command = input(self.MESSAGES["enter_command"])
+            self.refilling(command)
+            return True
+
+    def choose_action(self, action):
+        if action == "1":
+            self.current_state = "enter_drink"
+        elif action == "2":
+            self.current_state = "refilling"
+        elif action == "3":
+            self.take_cash()
+            self.current_state = "action_required"
+        elif action == "4":
+            self.print_current_amounts()
+            self.current_state = "action_required"
+        else:
+            print(self.MESSAGES["error"])
+            self.current_state = "action_required"
+
+    def choose_drink(self, drink):
+        espresso_params = {
+            "water": 250,
+            "milk": 0,
+            "beans": 16,
+            "price": 4
+        }
+        latte_params = {
+            "water": 350,
+            "milk": 75,
+            "beans": 20,
+            "price": 7
+        }
+        cappuccino_params = {
+            "water": 200,
+            "milk": 100,
+            "beans": 12,
+            "price": 6
+        }
+
+        if drink == "1":
+            self.set_resources_needed(espresso_params)
+            self.current_state = "enter_cups_amount"
+        elif drink == "2":
+            self.set_resources_needed(latte_params)
+            self.current_state = "enter_cups_amount"
+        elif drink == "3":
+            self.set_resources_needed(cappuccino_params)
+            self.current_state = "enter_cups_amount"
+        elif drink == "0":
+            self.current_state = "action_required"
+        else:
+            print(self.MESSAGES["error"])
+            self.current_state = "action_required"
+
+    def make_drink(self, cups):
+        self.print_current_amounts()
+        cups = int(cups)
+        if cups == 0:
+            self.current_state = "action_required"
+        print('''For %d cups of coffee you will need:
             %d ml of water
             %d ml of milk
             %d g of coffee beans
             ''' % (cups, self.water_per_cup * cups, self.milk_per_cup * cups, self.beans_per_cup * cups))
-            if self.check_ingredients_amount(cups):
-                print("Preparing a coffee...")
-                print("Boiling water...")
-                print("Adding beans...")
-                print("Pouring...")
-                print("Adding milk if needed...")
-                print("Ready!")
-                self.update_ingredients_amount(cups)
-                self.print_current_amounts()
-                break
+        if self.check_ingredients_amount(cups):
+            print("Preparing a coffee...")
+            print("Boiling water...")
+            print("Adding beans...")
+            print("Pouring...")
+            print("Adding milk if needed...")
+            print("Ready!")
+            self.update_ingredients_amount(cups)
+            self.current_state = "action_required"
 
-    def set_resources_needed(self, drink):
-        self.water_per_cup = drink["water"]
-        self.milk_per_cup = drink["milk"]
-        self.beans_per_cup = drink["beans"]
-        self.drink_price = drink["price"]
+    def set_resources_needed(self, drink_params):
+        self.water_per_cup = drink_params["water"]
+        self.milk_per_cup = drink_params["milk"]
+        self.beans_per_cup = drink_params["beans"]
+        self.drink_price = drink_params["price"]
 
-    def refilling(self):
-        self.print_current_amounts()
-        water_to_add = self.user_input("How much water do you want to add? ")
-        self.water_total += int(water_to_add)
-        milk_to_add = self.user_input("How much milk do you want to add? ")
-        self.milk_total += int(milk_to_add)
-        beans_to_add = self.user_input("How much beans do you want to add? ")
-        self.beans_total += int(beans_to_add)
-        empty_cups_to_add = self.user_input("How many cups do you want to add? ")
-        self.empty_cups_total += int(empty_cups_to_add)
-        self.print_current_amounts()
+    def refilling(self, amounts):
+        amounts = amounts.split(" ")
+        if len(amounts) < 4:
+            print(self.MESSAGES["error"])
+            # todo improve validation
+        else:
+            self.water_total += int(amounts[0])
+            self.milk_total += int(amounts[1])
+            self.beans_total += int(amounts[2])
+            self.empty_cups_total += int(amounts[3])
+            self.print_current_amounts()
+            self.current_state = "action_required"
 
     def take_cash(self):
         self.print_current_amounts()
@@ -158,32 +188,27 @@ class CoffeeMachine:
             return False
 
         # calculating total amount of resources needed for preparing of specified amount of cups
-        water_needed = self.water_per_cup * cups
-        milk_needed = self.milk_per_cup * cups
-        beans_needed = self.beans_per_cup * cups
+        possible_cups_amount = self.calculate_possible_cups()
 
-        # calculating how many more cups can be prepared with ingredients available
-        water_coeff = self.water_total // self.water_per_cup
-        if self.milk_per_cup == 0: # in case of espresso
-            milk_coeff = 2
-        else:
-            milk_coeff = self.milk_total // self.milk_per_cup
-        beans_coeff = self.beans_total // self.beans_per_cup
-
-        if water_needed == self.water_total and milk_needed == self.milk_total and beans_needed == self.beans_total:
+        if possible_cups_amount > cups:
+            print("Yes, I can make that amount of coffee (and even %d more than that)" % (possible_cups_amount - cups))
+            return True
+        elif possible_cups_amount == cups:
             print("Yes, I can make that amount of coffee")
             return True
-        elif water_needed <= self.water_total and milk_needed <= self.milk_total and beans_needed <= self.beans_total:
-            if water_coeff > 1 and milk_coeff > 1 and beans_coeff > 1:
-                print("Yes, I can make that amount of coffee (and even %d more than that)" % (
-                        min(water_coeff, milk_coeff, beans_coeff) - cups))
-            else:
-                print("Yes, I can make that amount of coffee")
-            return True
         else:
-            print("No, I can make only %d cups of coffee" % (min(water_coeff, milk_coeff, beans_coeff)))
+            print("No, I can make only %d cup(s) of coffee" % possible_cups_amount)
             return False
+
+    def calculate_possible_cups(self):
+        coefficients = [self.water_total // self.water_per_cup, self.beans_total // self.beans_per_cup]
+        if self.milk_per_cup > 0:  # in case of espresso
+            coefficients.append(self.water_total // self.milk_per_cup)
+        return min(coefficients)
 
 
 coffee = CoffeeMachine(400, 540, 120, 9, 550)
-coffee.start_machine()
+
+while True:
+    if not coffee.process_user_command():
+        break
