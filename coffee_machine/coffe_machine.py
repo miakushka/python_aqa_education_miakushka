@@ -10,20 +10,20 @@ class CoffeeMachine:
     current_state = "action_required"
 
     MESSAGES = {
-        "welcome": '''Please choose an action: 
+        "action_required": '''Please choose an action: 
             1 - buy coffee; 
             2 - fill coffee machine; 
             3 - take the cash; 
             4 - display remaining ingredients; 
-            5 - exit''',
+            0 - exit''',
 
-        "select_drink": '''Now please select a drink: 
+        "enter_drink": '''Now please select a drink: 
                     1 - espresso; 
                     2 - latte; 
                     3 - cappuccino. 
                     Enter 0 to return to main menu ''',
 
-        "cups_amount": "How many cups do you want? Press 0 to return to main menu ",
+        "enter_cups_amount": "How many cups do you want? Press 0 to return to main menu ",
 
         "refilling": '''How much ingredients would you like to add (water, milk, beans, cups)?
         Enter needed quantities, divided by space: ''',
@@ -42,33 +42,38 @@ class CoffeeMachine:
 
     def process_user_command(self):
         if self.current_state == "action_required":
-            print(self.MESSAGES["welcome"])
-            command = input(self.MESSAGES["enter_command"])
-            if command == "5":
+            command = self.print_message(self.current_state)
+            if command == "0":
                 return False
             self.choose_action(command)
             return True
 
         elif self.current_state == "enter_drink":
-            print(self.MESSAGES["select_drink"])
-            command = input(self.MESSAGES["enter_command"])
+            command = self.print_message(self.current_state)
             if command == "0":
-                return False
-            self.choose_drink(command)
+                self.current_state = "action_required"
+            else:
+                self.choose_drink(command)
             return True
 
         elif self.current_state == "enter_cups_amount":
-            print(self.MESSAGES["cups_amount"])
-            command = input(self.MESSAGES["enter_command"])
-            self.make_drink(command)
+            command = self.print_message(self.current_state)
+            if command == "0":
+                self.current_state = "action_required"
+            else:
+                self.make_drink(command)
             return True
 
         elif self.current_state == "refilling":
             self.print_current_amounts()
-            print(self.MESSAGES["refilling"])
-            command = input(self.MESSAGES["enter_command"])
+            command = self.print_message(self.current_state)
             self.refilling(command)
             return True
+
+    def print_message(self, state):
+        print(self.MESSAGES[state])
+        command = input(self.MESSAGES["enter_command"])
+        return command
 
     def choose_action(self, action):
         if action == "1":
@@ -203,7 +208,7 @@ class CoffeeMachine:
     def calculate_possible_cups(self):
         coefficients = [self.water_total // self.water_per_cup, self.beans_total // self.beans_per_cup]
         if self.milk_per_cup > 0:  # in case of espresso
-            coefficients.append(self.water_total // self.milk_per_cup)
+            coefficients.append(self.milk_total // self.milk_per_cup)
         return min(coefficients)
 
 
