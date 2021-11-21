@@ -2,4 +2,4 @@
 *.txt
 *.log
 *.s3db
-*s3db-journal
+*.s3db-journal
