@@ -3,6 +3,33 @@ import sqlite3
 
 
 class BankingSystem:
+    IIN = "400000"
+    current_state = "main_menu"
+    current_user = None
+    MESSAGES = {
+        "main_menu": '''
+                   Welcome to PyBank!
+                   Please choose an action: 
+                   1 - Create an account; 
+                   2 - Log into account;  
+                   0 - Exit''',
+        "enter_card_number": "Please enter your card number",
+        "enter_pin_code": "Please enter your PIN",
+        "enter_command": "Your input: ",
+        "error": "Wrong command, please try again",
+        "logged_in": '''
+                       1 - Balance;
+                       2 - Add Income;
+                       3 - Do Transfer;
+                       4 - Close Account;
+                       5 - Log out;  
+                       0 - Exit''',
+        "add_income": "Specify income amount.",
+        "transfer_money": '''Specify card number of recipient and amount of money, 
+           that you want to transfer, divided by space.''',
+        "close_account": '''Your account is about to close and all the data will be lost. 
+           Enter your PIN to confirm account removing.'''
+    }
 
     def __init__(self):
         self.connection = sqlite3.connect('card.s3db')
@@ -17,34 +44,6 @@ class BankingSystem:
         BLOCKED INTEGER DEFAULT 0)
         ''')
         self.connection.commit()
-
-    IIN = "400000"
-    current_state = "main_menu"
-    current_user = None
-    MESSAGES = {
-        "main_menu": '''
-                Welcome to PyBank!
-                Please choose an action: 
-                1 - Create an account; 
-                2 - Log into account;  
-                0 - Exit''',
-        "enter_card_number": "Please enter your card number",
-        "enter_pin_code": "Please enter your PIN",
-        "enter_command": "Your input: ",
-        "error": "Wrong command, please try again",
-        "logged_in": '''
-                    1 - Balance;
-                    2 - Add Income;
-                    3 - Do Transfer;
-                    4 - Close Account;
-                    5 - Log out;  
-                    0 - Exit''',
-        "add_income": "Specify income amount.",
-        "transfer_money": '''Specify card number of recipient and amount of money, 
-        that you want to transfer, divided by space.''',
-        "close_account": '''Your account is about to close and all the data will be lost. 
-        Enter your PIN to confirm account removing.'''
-    }
 
     def process_user_command(self):
         if self.current_state == "main_menu":
