@@ -1,3 +1,5 @@
+.idea
 *.txt
 *.log
-.idea
+*.s3db
+*s3db-journal
