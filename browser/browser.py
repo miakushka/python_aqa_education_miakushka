@@ -32,16 +32,7 @@ class Browser:
             self.directory = command[1]
 
         if url == "back":
-            try:
-                url_name = self.queue.get(timeout=1)
-                print(url_name)
-                self.__print_site_content(self.__get_saved_site_content(url_name))
-                self.last_url = url_name
-            except IndexError:
-                ...
-                # do nothing if history is empty
-            finally:
-                return True
+            self.__back_action()
 
         if not self.__validate_url(url):
             print("There is an error in URL entered. Please try again.")
@@ -51,10 +42,25 @@ class Browser:
                 # keep last visited url in the history
                 self.queue.put(self.last_url)
 
-            site_content = self.__get_site(url)
-            self.__save_site(url, self.directory, site_content)
-            self.__print_site_content(site_content)
-            self.last_url = url
+            self.__navigate_action(url)
+            return True
+
+    def __navigate_action(self, url):
+        site_content = self.__get_site(url)
+        self.__save_site(url, self.directory, site_content)
+        self.__print_site_content(site_content)
+        self.last_url = url
+
+    def __back_action(self):
+        try:
+            url_name = self.queue.get(timeout=1)
+            print(url_name)
+            self.__print_site_content(self.__get_saved_site_content(url_name))
+            self.last_url = url_name
+        except IndexError:
+            ...
+            # do nothing if history is empty
+        finally:
             return True
 
     def __get_site(self, url):
